@@ -1,5 +1,9 @@
+import shutil
+from pathlib import Path
+
 import yaml
 from click.testing import CliRunner
+
 from gherkin_sqlmesh.cli import main
 
 
@@ -11,8 +15,6 @@ def test_cli_compiles_single_feature_to_output_dirs(tmp_path):
     out_audits = tmp_path / "audits"
 
     # Copy fixture feature file
-    import shutil
-    from pathlib import Path
     shutil.copy(
         Path(__file__).parent / "fixtures" / "features" / "payments.feature",
         features / "payments.feature",
@@ -29,7 +31,7 @@ def test_cli_compiles_single_feature_to_output_dirs(tmp_path):
     yaml_files = list(out_tests.glob("*.yaml"))
     assert len(yaml_files) == 1
     content = yaml.safe_load(yaml_files[0].read_text())
-    key = list(content.keys())[0]
+    key = next(iter(content.keys()))
     assert key.startswith("test_stg_payments")
     assert content[key]["model"] == "stg_payments"
 
@@ -41,8 +43,6 @@ def test_cli_recursively_compiles_feature_directory(tmp_path):
     out_tests = tmp_path / "tests"
     out_audits = tmp_path / "audits"
 
-    import shutil
-    from pathlib import Path
     fixture_dir = Path(__file__).parent / "fixtures" / "features"
     shutil.copy(fixture_dir / "payments.feature", features / "payments.feature")
 
@@ -59,7 +59,6 @@ def test_cli_recursively_compiles_feature_directory(tmp_path):
 
 def test_cli_exits_nonzero_on_unknown_step_with_clear_message(tmp_path):
     runner = CliRunner()
-    from pathlib import Path
     bad_feature = Path(__file__).parent / "fixtures" / "features" / "bad_steps.feature"
     result = runner.invoke(main, [
         "compile",

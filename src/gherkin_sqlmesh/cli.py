@@ -63,9 +63,21 @@ def main() -> None:
 
 @main.command()
 @click.argument("features_path", type=click.Path(exists=True, path_type=Path))
-@click.option("--out-tests", required=True, type=click.Path(path_type=Path), help="Directory for test YAML files")
-@click.option("--out-audits", required=True, type=click.Path(path_type=Path), help="Directory for audit SQL files")
-@click.option("--dialect", default="duckdb", show_default=True, help="SQL dialect for audit generation")
+@click.option(
+    "--out-tests",
+    required=True,
+    type=click.Path(path_type=Path),
+    help="Directory for test YAML files",
+)
+@click.option(
+    "--out-audits",
+    required=True,
+    type=click.Path(path_type=Path),
+    help="Directory for audit SQL files",
+)
+@click.option(
+    "--dialect", default="duckdb", show_default=True, help="SQL dialect for audit generation"
+)
 def compile(features_path: Path, out_tests: Path, out_audits: Path, dialect: str) -> None:
     """Compile .feature file(s) to SQLMesh tests and audits."""
     if features_path.is_dir():
