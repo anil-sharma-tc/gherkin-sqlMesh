@@ -36,6 +36,14 @@ def _emit_unique(model: str, col: str) -> str:
     return sql
 
 
+def _emit_accepted_values(model: str, col: str, values: list[str]) -> str:
+    audit_name = f"assert_{model}_{col}_accepted_values"
+    quoted_values = ", ".join(f"'{v}'" for v in values)
+    sql = f"-- {audit_name}\nSELECT * FROM @this_model WHERE {col} NOT IN ({quoted_values});"
+    _validate_sql(sql)
+    return sql
+
+
 def emit(scenario: Scenario) -> list[str]:
     """Emit a list of SQL audit strings (one per Then assertion) for the scenario."""
     model = _get_model_name(scenario)
@@ -59,6 +67,15 @@ def emit(scenario: Scenario) -> list[str]:
         if m:
             col = m.group(1)
             results.append(_emit_unique(model, col))
+            continue
+
+        # column "<col>" should only contain values "v1", "v2", ...
+        m = re.match(r'^column "(.+)" should only contain values (.+)$', text)
+        if m:
+            col = m.group(1)
+            raw_values = m.group(2)
+            values = re.findall(r'"([^"]+)"', raw_values)
+            results.append(_emit_accepted_values(model, col, values))
             continue
 
     return results
