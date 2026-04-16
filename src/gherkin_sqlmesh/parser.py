@@ -47,9 +47,8 @@ def parse(path: Path) -> Feature:
             keyword = step_node["keyword"].strip().lower()
             text = step_node["text"]
             data_table = None
-            argument = step_node.get("argument")
-            if argument and "dataTable" in argument:
-                rows = argument["dataTable"]["rows"]
+            if "dataTable" in step_node:
+                rows = step_node["dataTable"]["rows"]
                 data_table = [
                     [cell["value"] for cell in row["cells"]] for row in rows
                 ]
