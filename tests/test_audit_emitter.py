@@ -54,3 +54,32 @@ def test_emit_accepted_values_audit():
     assert "'shipped'" in sql
     assert "'delivered'" in sql
     sqlglot.parse_one(sql, dialect="duckdb")
+
+
+def test_emit_row_count_greater_than_audit():
+    scenario = Scenario(
+        name="Has enough rows",
+        steps=[
+            Step(keyword="given", text="stg_payments is materialized"),
+            Step(keyword="then", text="row count should be greater than 0"),
+        ],
+    )
+    results = emit(scenario)
+    sql = results[0]
+    assert "assert_stg_payments_row_count_gt_0" in sql
+    assert "COUNT(*)" in sql.upper()
+    sqlglot.parse_one(sql, dialect="duckdb")
+
+def test_emit_row_count_equal_audit():
+    scenario = Scenario(
+        name="Exactly ten rows",
+        steps=[
+            Step(keyword="given", text="stg_payments is materialized"),
+            Step(keyword="then", text="row count should equal 10"),
+        ],
+    )
+    results = emit(scenario)
+    sql = results[0]
+    assert "assert_stg_payments_row_count_eq_10" in sql
+    assert "COUNT(*)" in sql.upper()
+    sqlglot.parse_one(sql, dialect="duckdb")
