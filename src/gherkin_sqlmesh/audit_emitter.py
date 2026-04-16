@@ -29,6 +29,13 @@ def _emit_not_null(model: str, col: str) -> str:
     return sql
 
 
+def _emit_unique(model: str, col: str) -> str:
+    audit_name = f"assert_{model}_{col}_unique"
+    sql = f"-- {audit_name}\nSELECT {col}, COUNT(*) FROM @this_model GROUP BY {col} HAVING COUNT(*) > 1;"
+    _validate_sql(sql)
+    return sql
+
+
 def emit(scenario: Scenario) -> list[str]:
     """Emit a list of SQL audit strings (one per Then assertion) for the scenario."""
     model = _get_model_name(scenario)
@@ -45,6 +52,13 @@ def emit(scenario: Scenario) -> list[str]:
         if m:
             col = m.group(1)
             results.append(_emit_not_null(model, col))
+            continue
+
+        # column "<col>" should be unique
+        m = re.match(r'^column "(.+)" should be unique$', text)
+        if m:
+            col = m.group(1)
+            results.append(_emit_unique(model, col))
             continue
 
     return results
