@@ -7,7 +7,7 @@ from gherkin_sqlmesh.parser import Scenario, Step
 def _select_part(sql: str) -> str:
     """Extract the SELECT statement after the AUDIT header for sqlglot validation."""
     lines = sql.strip().splitlines()
-    return "\n".join(l for l in lines if not l.strip().startswith("AUDIT ("))
+    return "\n".join(line for line in lines if not line.strip().startswith("AUDIT ("))
 
 
 def test_emit_not_null_audit():
