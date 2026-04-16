@@ -1,7 +1,6 @@
-import pytest
-from gherkin_sqlmesh.parser import Scenario, Step
 from gherkin_sqlmesh.audit_emitter import emit
-from gherkin_sqlmesh.sql_validator import validate_audit_sql, transpile_audit_sql
+from gherkin_sqlmesh.parser import Scenario, Step
+from gherkin_sqlmesh.sql_validator import transpile_audit_sql, validate_audit_sql
 
 
 def _all_audit_scenarios():
@@ -45,5 +44,5 @@ def test_audit_sql_transpiles_to_snowflake():
         snowflake_sql = transpile_audit_sql(sql, from_dialect="duckdb", to_dialect="snowflake")
         # Result should still be valid SQL with the audit header preserved
         assert "AUDIT (name" in snowflake_sql
-        assert "payment_id IS NULL" in snowflake_sql.upper()
+        assert "PAYMENT_ID IS NULL" in snowflake_sql.upper()
         validate_audit_sql(snowflake_sql, dialect="snowflake")
