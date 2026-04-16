@@ -1,5 +1,5 @@
 from gherkin_sqlmesh.parser import Scenario, Step
-from gherkin_sqlmesh.classifier import classify, ClassificationError
+from gherkin_sqlmesh.classifier import classify, ClassificationError, UnknownStepError
 
 
 def test_classify_scenario_with_only_column_assertion_is_audit():
@@ -38,3 +38,16 @@ def test_classify_mixed_scenario_raises_clear_error():
     with pt.raises(ClassificationError) as exc_info:
         classify(scenario)
     assert "split" in str(exc_info.value).lower()
+
+
+def test_classify_unknown_step_raises():
+    scenario = Scenario(
+        name="Weird scenario",
+        steps=[
+            Step(keyword="given", text="the moon is full"),
+        ],
+    )
+    import pytest as pt
+    with pt.raises(UnknownStepError) as exc_info:
+        classify(scenario)
+    assert "the moon is full" in str(exc_info.value)
