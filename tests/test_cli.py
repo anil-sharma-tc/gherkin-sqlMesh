@@ -69,3 +69,31 @@ def test_cli_exits_nonzero_on_unknown_step_with_clear_message(tmp_path):
     ])
     assert result.exit_code != 0
     assert "the moon is full" in result.output
+
+
+def test_cli_respects_dialect_flag(tmp_path):
+    runner = CliRunner()
+    features = tmp_path / "features"
+    features.mkdir()
+    out_tests = tmp_path / "tests"
+    out_audits = tmp_path / "audits"
+
+    # Write an audit-only feature
+    feature_content = """Feature: Audit only
+
+  Scenario: Payment IDs are never null
+    Given stg_payments is materialized
+    Then column "payment_id" should not be null
+"""
+    (features / "audit.feature").write_text(feature_content)
+
+    result = runner.invoke(main, [
+        "compile",
+        str(features),
+        "--out-tests", str(out_tests),
+        "--out-audits", str(out_audits),
+        "--dialect", "snowflake",
+    ])
+    assert result.exit_code == 0, result.output
+    sql_files = list(out_audits.glob("*.sql"))
+    assert len(sql_files) == 1
