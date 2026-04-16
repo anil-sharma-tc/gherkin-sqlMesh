@@ -44,6 +44,20 @@ def _emit_accepted_values(model: str, col: str, values: list[str]) -> str:
     return sql
 
 
+def _emit_row_count_gt(model: str, n: int) -> str:
+    audit_name = f"assert_{model}_row_count_gt_{n}"
+    sql = f"-- {audit_name}\nSELECT * FROM (SELECT COUNT(*) AS cnt FROM @this_model) WHERE cnt <= {n};"
+    _validate_sql(sql)
+    return sql
+
+
+def _emit_row_count_eq(model: str, n: int) -> str:
+    audit_name = f"assert_{model}_row_count_eq_{n}"
+    sql = f"-- {audit_name}\nSELECT * FROM (SELECT COUNT(*) AS cnt FROM @this_model) WHERE cnt != {n};"
+    _validate_sql(sql)
+    return sql
+
+
 def emit(scenario: Scenario) -> list[str]:
     """Emit a list of SQL audit strings (one per Then assertion) for the scenario."""
     model = _get_model_name(scenario)
@@ -76,6 +90,20 @@ def emit(scenario: Scenario) -> list[str]:
             raw_values = m.group(2)
             values = re.findall(r'"([^"]+)"', raw_values)
             results.append(_emit_accepted_values(model, col, values))
+            continue
+
+        # row count should be greater than <n>
+        m = re.match(r"^row count should be greater than (\d+)$", text)
+        if m:
+            n = int(m.group(1))
+            results.append(_emit_row_count_gt(model, n))
+            continue
+
+        # row count should equal <n>
+        m = re.match(r"^row count should equal (\d+)$", text)
+        if m:
+            n = int(m.group(1))
+            results.append(_emit_row_count_eq(model, n))
             continue
 
     return results
