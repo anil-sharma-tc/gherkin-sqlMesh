@@ -1,7 +1,7 @@
 from pathlib import Path
 import yaml
 from gherkin_sqlmesh.parser import Scenario, Step
-from gherkin_sqlmesh.test_emitter import emit, rows_to_dicts
+from gherkin_sqlmesh.test_emitter import emit, make_test_name, rows_to_dicts
 
 EXPECTED = Path(__file__).parent / "fixtures" / "expected"
 
@@ -74,3 +74,8 @@ def test_emit_handles_multiple_given_input_tables():
     test = list(result.values())[0]
     assert "table_a" in test["inputs"]
     assert "table_b" in test["inputs"]
+
+
+def test_test_name_is_sanitized_scenario_name():
+    name = make_test_name("stg_payments", "Amount converts from cents to dollars")
+    assert name == "test_stg_payments_amount_converts_from_cents_to_dollars"
