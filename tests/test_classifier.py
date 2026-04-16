@@ -1,5 +1,5 @@
 from gherkin_sqlmesh.parser import Scenario, Step
-from gherkin_sqlmesh.classifier import classify
+from gherkin_sqlmesh.classifier import classify, ClassificationError
 
 
 def test_classify_scenario_with_only_column_assertion_is_audit():
@@ -23,3 +23,18 @@ def test_classify_scenario_with_input_fixture_and_when_step_is_test():
         ],
     )
     assert classify(scenario) == "test"
+
+
+def test_classify_mixed_scenario_raises_clear_error():
+    scenario = Scenario(
+        name="Mixed bad scenario",
+        steps=[
+            Step(keyword="given", text="seed_payments contains:", data_table=[["id"],["1"]]),
+            Step(keyword="when", text="stg_payments model runs"),
+            Step(keyword="then", text='column "id" should not be null'),
+        ],
+    )
+    import pytest as pt
+    with pt.raises(ClassificationError) as exc_info:
+        classify(scenario)
+    assert "split" in str(exc_info.value).lower()
