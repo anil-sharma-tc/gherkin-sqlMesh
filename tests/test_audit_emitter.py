@@ -1,6 +1,7 @@
 import sqlglot
-from gherkin_sqlmesh.parser import Scenario, Step
+
 from gherkin_sqlmesh.audit_emitter import emit
+from gherkin_sqlmesh.parser import Scenario, Step
 
 
 def test_emit_not_null_audit():
@@ -42,7 +43,10 @@ def test_emit_accepted_values_audit():
         name="Status values are valid",
         steps=[
             Step(keyword="given", text="stg_payments is materialized"),
-            Step(keyword="then", text='column "status" should only contain values "pending", "shipped", "delivered"'),
+            Step(
+                keyword="then",
+                text='column "status" should only contain values "pending", "shipped", "delivered"',
+            ),
         ],
     )
     results = emit(scenario)

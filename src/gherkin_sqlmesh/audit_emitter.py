@@ -18,7 +18,10 @@ def _get_model_name(scenario: Scenario) -> str:
 
 
 def _validate_sql(sql: str) -> None:
-    """Validate audit SQL is parseable by sqlglot (uses @this_model which sqlglot treats as a variable)."""
+    """Validate audit SQL is parseable by sqlglot.
+
+    sqlglot treats @this_model as a variable, so no substitution is needed.
+    """
     sqlglot.parse_one(sql, dialect="duckdb")
 
 
@@ -31,7 +34,8 @@ def _emit_not_null(model: str, col: str) -> str:
 
 def _emit_unique(model: str, col: str) -> str:
     audit_name = f"assert_{model}_{col}_unique"
-    sql = f"-- {audit_name}\nSELECT {col}, COUNT(*) FROM @this_model GROUP BY {col} HAVING COUNT(*) > 1;"
+    select = f"SELECT {col}, COUNT(*) FROM @this_model GROUP BY {col} HAVING COUNT(*) > 1;"
+    sql = f"-- {audit_name}\n{select}"
     _validate_sql(sql)
     return sql
 
@@ -46,14 +50,16 @@ def _emit_accepted_values(model: str, col: str, values: list[str]) -> str:
 
 def _emit_row_count_gt(model: str, n: int) -> str:
     audit_name = f"assert_{model}_row_count_gt_{n}"
-    sql = f"-- {audit_name}\nSELECT * FROM (SELECT COUNT(*) AS cnt FROM @this_model) WHERE cnt <= {n};"
+    subquery = "SELECT COUNT(*) AS cnt FROM @this_model"
+    sql = f"-- {audit_name}\nSELECT * FROM ({subquery}) WHERE cnt <= {n};"
     _validate_sql(sql)
     return sql
 
 
 def _emit_row_count_eq(model: str, n: int) -> str:
     audit_name = f"assert_{model}_row_count_eq_{n}"
-    sql = f"-- {audit_name}\nSELECT * FROM (SELECT COUNT(*) AS cnt FROM @this_model) WHERE cnt != {n};"
+    subquery = "SELECT COUNT(*) AS cnt FROM @this_model"
+    sql = f"-- {audit_name}\nSELECT * FROM ({subquery}) WHERE cnt != {n};"
     _validate_sql(sql)
     return sql
 
