@@ -1,0 +1,12 @@
+test_stg_payments_amount_converts_from_cents_to_dollars:
+  model: stg_payments
+  inputs:
+    seed_raw_payments:
+      - id: 1
+        order_id: 10
+        amount: 1800
+  outputs:
+    partial: true
+    query:
+      - payment_id: 1
+        amount: 18.0
