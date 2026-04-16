@@ -55,3 +55,17 @@ def test_cli_recursively_compiles_feature_directory(tmp_path):
     assert result.exit_code == 0, result.output
     yaml_files = list(out_tests.glob("*.yaml"))
     assert len(yaml_files) >= 1
+
+
+def test_cli_exits_nonzero_on_unknown_step_with_clear_message(tmp_path):
+    runner = CliRunner()
+    from pathlib import Path
+    bad_feature = Path(__file__).parent / "fixtures" / "features" / "bad_steps.feature"
+    result = runner.invoke(main, [
+        "compile",
+        str(bad_feature),
+        "--out-tests", str(tmp_path / "tests"),
+        "--out-audits", str(tmp_path / "audits"),
+    ])
+    assert result.exit_code != 0
+    assert "the moon is full" in result.output
