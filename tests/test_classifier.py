@@ -11,3 +11,15 @@ def test_classify_scenario_with_only_column_assertion_is_audit():
         ],
     )
     assert classify(scenario) == "audit"
+
+
+def test_classify_scenario_with_input_fixture_and_when_step_is_test():
+    scenario = Scenario(
+        name="Amount converts from cents to dollars",
+        steps=[
+            Step(keyword="given", text="seed_raw_payments contains:", data_table=[["id","amount"],["1","1800"]]),
+            Step(keyword="when", text="stg_payments model runs"),
+            Step(keyword="then", text="output should contain:", data_table=[["payment_id","amount"],["1","18.0"]]),
+        ],
+    )
+    assert classify(scenario) == "test"
