@@ -17,51 +17,49 @@ def _get_model_name(scenario: Scenario) -> str:
     raise ValueError(f"No 'Given <model> is materialized' step found in scenario '{scenario.name}'")
 
 
-def _validate_sql(sql: str) -> None:
-    """Validate audit SQL is parseable by sqlglot.
-
-    sqlglot treats @this_model as a variable, so no substitution is needed.
-    """
-    sqlglot.parse_one(sql, dialect="duckdb")
+def _build_audit(audit_name: str, select_sql: str) -> str:
+    """Wrap a SELECT statement in the SQLMesh AUDIT header format."""
+    full = f"AUDIT (name {audit_name});\n{select_sql}"
+    sqlglot.parse_one(select_sql, dialect="duckdb")
+    return full
 
 
 def _emit_not_null(model: str, col: str) -> str:
-    audit_name = f"assert_{model}_{col}_not_null"
-    sql = f"-- {audit_name}\nSELECT * FROM @this_model WHERE {col} IS NULL;"
-    _validate_sql(sql)
-    return sql
+    return _build_audit(
+        f"assert_{model}_{col}_not_null",
+        f"SELECT * FROM @this_model WHERE {col} IS NULL;",
+    )
 
 
 def _emit_unique(model: str, col: str) -> str:
-    audit_name = f"assert_{model}_{col}_unique"
-    select = f"SELECT {col}, COUNT(*) FROM @this_model GROUP BY {col} HAVING COUNT(*) > 1;"
-    sql = f"-- {audit_name}\n{select}"
-    _validate_sql(sql)
-    return sql
+    return _build_audit(
+        f"assert_{model}_{col}_unique",
+        f"SELECT {col}, COUNT(*) FROM @this_model GROUP BY {col} HAVING COUNT(*) > 1;",
+    )
 
 
 def _emit_accepted_values(model: str, col: str, values: list[str]) -> str:
-    audit_name = f"assert_{model}_{col}_accepted_values"
     quoted_values = ", ".join(f"'{v}'" for v in values)
-    sql = f"-- {audit_name}\nSELECT * FROM @this_model WHERE {col} NOT IN ({quoted_values});"
-    _validate_sql(sql)
-    return sql
+    return _build_audit(
+        f"assert_{model}_{col}_accepted_values",
+        f"SELECT * FROM @this_model WHERE {col} NOT IN ({quoted_values});",
+    )
 
 
 def _emit_row_count_gt(model: str, n: int) -> str:
-    audit_name = f"assert_{model}_row_count_gt_{n}"
     subquery = "SELECT COUNT(*) AS cnt FROM @this_model"
-    sql = f"-- {audit_name}\nSELECT * FROM ({subquery}) WHERE cnt <= {n};"
-    _validate_sql(sql)
-    return sql
+    return _build_audit(
+        f"assert_{model}_row_count_gt_{n}",
+        f"SELECT * FROM ({subquery}) WHERE cnt <= {n};",
+    )
 
 
 def _emit_row_count_eq(model: str, n: int) -> str:
-    audit_name = f"assert_{model}_row_count_eq_{n}"
     subquery = "SELECT COUNT(*) AS cnt FROM @this_model"
-    sql = f"-- {audit_name}\nSELECT * FROM ({subquery}) WHERE cnt != {n};"
-    _validate_sql(sql)
-    return sql
+    return _build_audit(
+        f"assert_{model}_row_count_eq_{n}",
+        f"SELECT * FROM ({subquery}) WHERE cnt != {n};",
+    )
 
 
 def emit(scenario: Scenario) -> list[str]:
