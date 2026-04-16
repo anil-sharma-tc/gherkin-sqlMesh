@@ -13,7 +13,7 @@ def rows_to_dicts(table: list[list[str]]) -> list[dict]:
     result = []
     for row in table[1:]:
         d = {}
-        for key, val in zip(headers, row):
+        for key, val in zip(headers, row, strict=True):
             d[key] = _coerce(val)
         result.append(d)
     return result

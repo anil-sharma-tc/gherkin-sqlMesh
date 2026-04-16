@@ -1,5 +1,7 @@
 from pathlib import Path
+
 import yaml
+
 from gherkin_sqlmesh.parser import Scenario, Step
 from gherkin_sqlmesh.test_emitter import emit, make_test_name, rows_to_dicts
 
@@ -42,7 +44,7 @@ def test_then_output_should_contain_sets_partial_true():
         ],
     )
     result = emit(scenario)
-    test = list(result.values())[0]
+    test = next(iter(result.values()))
     assert test["outputs"]["partial"] is True
 
 
@@ -56,7 +58,7 @@ def test_then_output_should_equal_omits_partial_flag():
         ],
     )
     result = emit(scenario)
-    test = list(result.values())[0]
+    test = next(iter(result.values()))
     assert "partial" not in test["outputs"]
 
 
@@ -71,7 +73,7 @@ def test_emit_handles_multiple_given_input_tables():
         ],
     )
     result = emit(scenario)
-    test = list(result.values())[0]
+    test = next(iter(result.values()))
     assert "table_a" in test["inputs"]
     assert "table_b" in test["inputs"]
 
