@@ -36,7 +36,8 @@ _KNOWN_THEN_PATTERNS = [
     re.compile(r"output should equal:$"),               # output should equal:
     re.compile(r'column ".+" should not be null$'),     # column "x" should not be null
     re.compile(r'column ".+" should be unique$'),       # column "x" should be unique
-    re.compile(r'column ".+" should only contain values .+$'),  # column "x" should only contain values ...
+    # column "x" should only contain values ...
+    re.compile(r'column ".+" should only contain values .+$'),
     re.compile(r"row count should be greater than \d+$"),       # row count should be greater than n
     re.compile(r"row count should equal \d+$"),                 # row count should equal n
 ]
