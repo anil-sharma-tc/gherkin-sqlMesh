@@ -35,3 +35,22 @@ def test_emit_unique_audit():
     assert "GROUP BY" in sql.upper()
     assert "HAVING" in sql.upper()
     sqlglot.parse_one(sql, dialect="duckdb")
+
+
+def test_emit_accepted_values_audit():
+    scenario = Scenario(
+        name="Status values are valid",
+        steps=[
+            Step(keyword="given", text="stg_payments is materialized"),
+            Step(keyword="then", text='column "status" should only contain values "pending", "shipped", "delivered"'),
+        ],
+    )
+    results = emit(scenario)
+    assert len(results) == 1
+    sql = results[0]
+    assert "assert_stg_payments_status_accepted_values" in sql
+    assert "NOT IN" in sql.upper()
+    assert "'pending'" in sql
+    assert "'shipped'" in sql
+    assert "'delivered'" in sql
+    sqlglot.parse_one(sql, dialect="duckdb")
