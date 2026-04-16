@@ -83,3 +83,18 @@ def test_emit_row_count_equal_audit():
     assert "assert_stg_payments_row_count_eq_10" in sql
     assert "COUNT(*)" in sql.upper()
     sqlglot.parse_one(sql, dialect="duckdb")
+
+
+def test_scenario_with_multiple_assertions_emits_multiple_audits():
+    scenario = Scenario(
+        name="Multiple checks",
+        steps=[
+            Step(keyword="given", text="stg_payments is materialized"),
+            Step(keyword="then", text='column "payment_id" should not be null'),
+            Step(keyword="then", text='column "payment_id" should be unique'),
+        ],
+    )
+    results = emit(scenario)
+    assert len(results) == 2
+    assert any("not_null" in r for r in results)
+    assert any("unique" in r for r in results)
