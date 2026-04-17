@@ -70,6 +70,68 @@ def test_cli_exits_nonzero_on_unknown_step_with_clear_message(tmp_path):
     assert "the moon is full" in result.output
 
 
+def test_cli_patches_model_file_with_audit_names(tmp_path):
+    models_dir = tmp_path / "models"
+    models_dir.mkdir()
+    model_file = models_dir / "stg_orders.sql"
+    model_file.write_text("MODEL (\n  name stg_orders,\n  kind FULL\n);\nSELECT id AS order_id FROM src\n")
+
+    feature_file = tmp_path / "orders.feature"
+    feature_file.write_text(
+        "Feature: Orders\n\n"
+        "  Scenario: Order IDs are never null\n"
+        "    Given stg_orders is materialized\n"
+        '    Then column "order_id" should not be null\n\n'
+        "  Scenario: Order IDs are unique\n"
+        "    Given stg_orders is materialized\n"
+        '    Then column "order_id" should be unique\n'
+    )
+
+    runner = CliRunner()
+    result = runner.invoke(main, [
+        "compile", str(feature_file),
+        "--out-tests", str(tmp_path / "tests"),
+        "--out-audits", str(tmp_path / "audits"),
+        "--models-dir", str(models_dir),
+    ])
+    assert result.exit_code == 0, result.output
+
+    patched = model_file.read_text()
+    assert "audits (" in patched
+    assert "assert_stg_orders_order_id_not_null" in patched
+    assert "assert_stg_orders_order_id_unique" in patched
+    # SELECT logic must be preserved
+    assert "SELECT id AS order_id FROM src" in patched
+
+
+def test_cli_creates_model_stub_when_model_file_missing(tmp_path):
+    models_dir = tmp_path / "models"
+    models_dir.mkdir()
+
+    feature_file = tmp_path / "orders.feature"
+    feature_file.write_text(
+        "Feature: Orders\n\n"
+        "  Scenario: Order IDs are never null\n"
+        "    Given stg_orders is materialized\n"
+        '    Then column "order_id" should not be null\n'
+    )
+
+    runner = CliRunner()
+    result = runner.invoke(main, [
+        "compile", str(feature_file),
+        "--out-tests", str(tmp_path / "tests"),
+        "--out-audits", str(tmp_path / "audits"),
+        "--models-dir", str(models_dir),
+    ])
+    assert result.exit_code == 0, result.output
+
+    stub = (models_dir / "stg_orders.sql").read_text()
+    assert "MODEL (" in stub
+    assert "name stg_orders" in stub
+    assert "audits (" in stub
+    assert "assert_stg_orders_order_id_not_null" in stub
+
+
 def test_cli_respects_dialect_flag(tmp_path):
     runner = CliRunner()
     features = tmp_path / "features"

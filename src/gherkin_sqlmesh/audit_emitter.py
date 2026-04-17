@@ -9,7 +9,7 @@ import sqlglot
 from gherkin_sqlmesh.parser import Scenario
 
 
-def _get_model_name(scenario: Scenario) -> str:
+def get_model_name(scenario: Scenario) -> str:
     """Extract model name from the 'Given <model> is materialized' step."""
     for step in scenario.steps:
         if step.keyword == "given" and step.text.endswith(" is materialized"):
@@ -64,7 +64,7 @@ def _emit_row_count_eq(model: str, n: int) -> str:
 
 def emit(scenario: Scenario) -> list[str]:
     """Emit a list of SQL audit strings (one per Then assertion) for the scenario."""
-    model = _get_model_name(scenario)
+    model = get_model_name(scenario)
     results = []
 
     for step in scenario.steps:
