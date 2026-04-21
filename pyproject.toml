@@ -5,7 +5,7 @@ description = "Compile Gherkin feature files to native SQLMesh tests and audits"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-authors = [{ name = "Your Name" }]
+authors = [{ name = "Anil Sharma", email = "anil.sharma@truecaller.com" }]
 
 dependencies = [
     "gherkin-official>=29.0.0",
@@ -25,6 +25,7 @@ dev = [
 
 [project.scripts]
 gherkin-sqlmesh = "gherkin_sqlmesh.cli:main"
+gs = "gherkin_sqlmesh.cli:main"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]
