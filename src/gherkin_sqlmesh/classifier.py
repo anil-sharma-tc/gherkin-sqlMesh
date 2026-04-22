@@ -82,6 +82,10 @@ def classify(scenario: Scenario) -> Literal["test", "audit"]:
         step.keyword == "given" and step.text.endswith("contains:") and step.data_table is not None
         for step in scenario.steps
     )
+    has_given_materialized = any(
+        step.keyword == "given" and step.text.endswith(" is materialized")
+        for step in scenario.steps
+    )
     has_audit_then = any(
         step.keyword == "then" and _is_audit_then(step.text)
         for step in scenario.steps
@@ -96,4 +100,11 @@ def classify(scenario: Scenario) -> Literal["test", "audit"]:
     if has_when_model_runs and has_given_contains:
         return "test"
 
-    return "audit"
+    if has_given_materialized:
+        return "audit"
+
+    raise ClassificationError(
+        f"Scenario '{scenario.name}' is incomplete: it must either be a unit test "
+        "('Given <table> contains:' with 'When <model> model runs') or an audit "
+        "('Given <model> is materialized' with audit assertions)."
+    )

@@ -2,9 +2,10 @@ from pathlib import Path
 
 import yaml
 
-from gherkin_sqlmesh.parser import Scenario, Step
+from gherkin_sqlmesh.parser import Scenario, Step, parse
 from gherkin_sqlmesh.test_emitter import emit, make_test_name, rows_to_dicts
 
+FIXTURES = Path(__file__).parent / "fixtures" / "features"
 EXPECTED = Path(__file__).parent / "fixtures" / "expected"
 
 
@@ -81,3 +82,12 @@ def test_emit_handles_multiple_given_input_tables():
 def test_test_name_is_sanitized_scenario_name():
     name = make_test_name("stg_payments", "Amount converts from cents to dollars")
     assert name == "test_stg_payments_amount_converts_from_cents_to_dollars"
+
+
+def test_emit_yaml_for_two_table_input_scenario():
+    feature = parse(FIXTURES / "orders_with_customers.feature")
+    result = emit(feature.scenarios[0])
+    expected = yaml.safe_load(
+        (EXPECTED / "test_stg_orders_orders_are_enriched_with_customer_names.yaml").read_text()
+    )
+    assert result == expected

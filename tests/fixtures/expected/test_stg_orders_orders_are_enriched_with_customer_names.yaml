@@ -1,0 +1,24 @@
+test_stg_orders_orders_are_enriched_with_customer_names:
+  model: stg_orders
+  inputs:
+    seed_raw_orders:
+      - id: 1
+        customer_id: 100
+        amount: 50
+      - id: 2
+        customer_id: 101
+        amount: 75
+    seed_raw_customers:
+      - id: 100
+        name: Alice
+      - id: 101
+        name: Bob
+  outputs:
+    partial: true
+    query:
+      - order_id: 1
+        customer_name: Alice
+        amount: 50
+      - order_id: 2
+        customer_name: Bob
+        amount: 75

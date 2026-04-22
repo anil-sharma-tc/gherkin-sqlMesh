@@ -59,3 +59,41 @@ def test_classify_unknown_step_raises():
     with pt.raises(UnknownStepError) as exc_info:
         classify(scenario)
     assert "the moon is full" in str(exc_info.value)
+
+
+def test_classify_scenario_with_input_fixture_but_no_when_raises():
+    scenario = Scenario(
+        name="Step with data table",
+        steps=[
+            Step(
+                keyword="given",
+                text="seed_payments contains:",
+                data_table=[["id", "amount"], ["1", "1800"]],
+            ),
+        ],
+    )
+    import pytest as pt
+    with pt.raises(ClassificationError) as exc_info:
+        classify(scenario)
+    assert "Step with data table" in str(exc_info.value)
+
+
+def test_classify_empty_scenario_raises():
+    scenario = Scenario(name="Does nothing", steps=[])
+    import pytest as pt
+    with pt.raises(ClassificationError) as exc_info:
+        classify(scenario)
+    assert "Does nothing" in str(exc_info.value)
+
+
+def test_classify_audit_thens_without_materialized_raises():
+    scenario = Scenario(
+        name="Orphan assertion",
+        steps=[
+            Step(keyword="then", text='column "payment_id" should not be null'),
+        ],
+    )
+    import pytest as pt
+    with pt.raises(ClassificationError) as exc_info:
+        classify(scenario)
+    assert "Orphan assertion" in str(exc_info.value)
