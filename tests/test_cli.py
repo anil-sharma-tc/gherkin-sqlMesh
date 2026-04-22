@@ -158,3 +158,44 @@ def test_cli_respects_dialect_flag(tmp_path):
     assert result.exit_code == 0, result.output
     sql_files = list(out_audits.glob("*.sql"))
     assert len(sql_files) == 1
+
+
+def test_cli_uses_default_output_dirs_when_omitted(tmp_path):
+    """Omitting --out-tests and --out-audits should default to 'tests' and 'audits' under cwd."""
+    runner = CliRunner()
+    fixture = Path(__file__).parent / "fixtures" / "features" / "mixed.feature"
+
+    with runner.isolated_filesystem(temp_dir=tmp_path) as cwd:
+        result = runner.invoke(main, ["compile", str(fixture)])
+        cwd_path = Path(cwd)
+        assert result.exit_code == 0, result.output
+        assert list((cwd_path / "tests").glob("*.yaml"))
+        assert list((cwd_path / "audits").glob("*.sql"))
+
+
+def test_cli_omit_out_audits_for_test_only_feature(tmp_path):
+    """Test-only feature compiles with only --out-tests; --out-audits must not be required."""
+    runner = CliRunner()
+    fixture = Path(__file__).parent / "fixtures" / "features" / "payments.feature"
+    out_tests = tmp_path / "tests"
+
+    result = runner.invoke(main, [
+        "compile", str(fixture),
+        "--out-tests", str(out_tests),
+    ])
+    assert result.exit_code == 0, result.output
+    assert list(out_tests.glob("*.yaml"))
+
+
+def test_cli_omit_out_tests_for_audit_only_feature(tmp_path):
+    """Audit-only feature compiles with only --out-audits; --out-tests must not be required."""
+    runner = CliRunner()
+    fixture = Path(__file__).parent / "fixtures" / "features" / "audit_only.feature"
+    out_audits = tmp_path / "audits"
+
+    result = runner.invoke(main, [
+        "compile", str(fixture),
+        "--out-audits", str(out_audits),
+    ])
+    assert result.exit_code == 0, result.output
+    assert list(out_audits.glob("*.sql"))

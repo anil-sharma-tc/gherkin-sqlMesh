@@ -93,13 +93,15 @@ def main() -> None:
 @click.argument("features_path", type=click.Path(exists=True, path_type=Path))
 @click.option(
     "--out-tests",
-    required=True,
+    default=Path("tests"),
+    show_default=True,
     type=click.Path(path_type=Path),
     help="Directory for test YAML files",
 )
 @click.option(
     "--out-audits",
-    required=True,
+    default=Path("audits"),
+    show_default=True,
     type=click.Path(path_type=Path),
     help="Directory for audit SQL files",
 )
